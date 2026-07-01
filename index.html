@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GraceForge — Vitrine</title>
+<style>
+  :root {
+    --bg: #0b0b0f;
+    --card: #16161d;
+    --card-hover: #1e1e28;
+    --fg: #f5f5f7;
+    --muted: #8a8a99;
+    --accent: #ee4d2d;
+    --accent-fg: #fff;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100dvh;
+  }
+  .cupom {
+    background: var(--accent); color: var(--accent-fg);
+    text-align: center; padding: 10px 16px;
+    font-size: 14px; font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  .cupom code {
+    background: rgba(0,0,0,0.25); padding: 2px 8px; border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: 1px; margin-left: 4px;
+  }
+  header {
+    padding: 28px 20px 16px;
+    text-align: center;
+  }
+  header h1 { font-size: 26px; margin: 0; font-weight: 700; letter-spacing: -0.5px; }
+  header p { color: var(--muted); margin: 6px 0 0; font-size: 14px; }
+  main {
+    max-width: 960px; margin: 0 auto;
+    padding: 12px 16px 60px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+  @media (min-width: 640px)  { .grid { grid-template-columns: repeat(3, 1fr); gap: 18px; } }
+  @media (min-width: 900px)  { .grid { grid-template-columns: repeat(4, 1fr); } }
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    display: flex; flex-direction: column;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .card:active { transform: scale(0.98); }
+  @media (hover: hover) {
+    .card:hover { background: var(--card-hover); transform: translateY(-2px); }
+  }
+  .card .img {
+    aspect-ratio: 1 / 1;
+    background: #0f0f14 center/cover no-repeat;
+  }
+  .card .body {
+    padding: 12px 14px 14px;
+    display: flex; flex-direction: column; gap: 6px;
+    flex: 1;
+  }
+  .card .nome {
+    font-size: 14px; line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card .preco {
+    color: var(--accent); font-weight: 700; font-size: 16px;
+    margin-top: auto;
+  }
+  .empty, .erro {
+    text-align: center; color: var(--muted); padding: 40px 20px;
+    font-size: 14px;
+  }
+  footer {
+    text-align: center; color: var(--muted); font-size: 12px;
+    padding: 20px 16px 30px;
+  }
+</style>
+</head>
+<body>
+<div class="cupom">Use o cupom <code>INSTA10</code> na Shopee</div>
+<header>
+  <h1>GraceForge</h1>
+  <p>Toque em um produto para abrir na Shopee</p>
+</header>
+<main>
+  <div id="grid" class="grid"></div>
+  <p id="status" class="empty">Carregando…</p>
+</main>
+<footer>© GraceForge</footer>
+
+<script>
+  const fmt = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+  async function carregar() {
+    const grid = document.getElementById("grid");
+    const status = document.getElementById("status");
+    try {
+      const r = await fetch("produtos.json", { cache: "no-cache" });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const produtos = await r.json();
+      if (!Array.isArray(produtos) || produtos.length === 0) {
+        status.textContent = "Nenhum produto por aqui ainda.";
+        return;
+      }
+      status.remove();
+      for (const p of produtos) {
+        const a = document.createElement("a");
+        a.className = "card";
+        a.href = p.shopee_url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+
+        const img = document.createElement("div");
+        img.className = "img";
+        if (p.imagem) img.style.backgroundImage = `url("${p.imagem.replace(/"/g, '%22')}")`;
+
+        const body = document.createElement("div");
+        body.className = "body";
+        const nome = document.createElement("div");
+        nome.className = "nome";
+        nome.textContent = p.nome || "";
+        const preco = document.createElement("div");
+        preco.className = "preco";
+        preco.textContent = typeof p.preco === "number" ? fmt.format(p.preco) : "";
+
+        body.append(nome, preco);
+        a.append(img, body);
+        grid.append(a);
+      }
+    } catch (e) {
+      status.className = "erro";
+      status.textContent = "Não consegui carregar produtos.json (" + e.message + ").";
+    }
+  }
+  carregar();
+</script>
+</body>
+</html>
